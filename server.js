@@ -31,3 +31,30 @@ app.get('/api', async (req, res) => {
         res.status(500).json({ error: "Failed to retrieve matches" });
     }
 });
+
+// POST /api - Create a new match record
+app.post('/api', async (req, res) => {
+    // Extract the data sent by the mobile app from the request body
+    const { game_title, character_played, kills, kda_ratio } = req.body;
+
+    // Quick backend validation to ensure no blank records are saved
+    if (!game_title || !character_played || kills === undefined || kda_ratio === undefined) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    try {
+        // Insert the new match into the database
+        const result = await db.run(`
+            INSERT INTO matches (game_title, character_played, kills, kda_ratio)
+            VALUES (?, ?, ?, ?)
+        `, [game_title, character_played, kills, kda_ratio]);
+
+        res.status(201).json({
+            message: "Match logged successfully!",
+            id: result.lastID 
+        });
+    } catch (error) {
+        console.error("Error inserting match:", error);
+        res.status(500).json({ error: "Failed to log match" });
+    }
+});

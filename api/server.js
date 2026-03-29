@@ -58,3 +58,32 @@ app.post('/api', async (req, res) => {
         res.status(500).json({ error: "Failed to log match" });
     }
 });
+
+// PUT /api/:id - Update an existing match
+app.put('/api/:id', async (req, res) => {
+    const { id } = req.params;
+    const { game_title, character_played, kills, kda_ratio } = req.body;
+
+    // Validate inputs
+    if (!game_title || !character_played || kills === undefined || kda_ratio === undefined) {
+        return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    try {
+        const result = await db.run(`
+            UPDATE matches 
+            SET game_title = ?, character_played = ?, kills = ?, kda_ratio = ?
+            WHERE id = ?
+        `, [game_title, character_played, kills, kda_ratio, id]);
+
+        // result.changes tells us how many rows were affected. If 0, the ID didn't exist.
+        if (result.changes === 0) {
+            return res.status(404).json({ error: "Match not found" });
+        }
+
+        res.json({ message: "Match updated successfully!" });
+    } catch (error) {
+        console.error("Error updating match:", error);
+        res.status(500).json({ error: "Failed to update match" });
+    }
+});

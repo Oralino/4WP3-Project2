@@ -123,3 +123,19 @@ app.get('/api/:id', async (req, res) => {
         res.status(500).json({ error: "Failed to retrieve match" });
     }
 });
+
+// DELETE /api - Delete all matches in the database
+app.delete('/api', async (req, res) => {
+    try {
+        // Delete all rows from the matches table
+        await db.run('DELETE FROM matches');
+        
+        // Resets the auto-increment counter
+        await db.run("DELETE FROM sqlite_sequence WHERE name='matches'");
+
+        res.json({ message: "All matches have been successfully deleted!" });
+    } catch (error) {
+        console.error("Error deleting all matches:", error);
+        res.status(500).json({ error: "Failed to clear database" });
+    }
+});

@@ -105,3 +105,21 @@ app.delete('/api/:id', async (req, res) => {
         res.status(500).json({ error: "Failed to delete match" });
     }
 });
+
+// GET /api/:id - Retrieve a single match by its ID
+app.get('/api/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const match = await db.get('SELECT * FROM matches WHERE id = ?', [id]);
+
+        if (!match) {
+            return res.status(404).json({ error: "Match not found" });
+        }
+
+        res.json(match);
+    } catch (error) {
+        console.error("Error fetching single match:", error);
+        res.status(500).json({ error: "Failed to retrieve match" });
+    }
+});

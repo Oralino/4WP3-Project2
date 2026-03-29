@@ -2,6 +2,7 @@
 async function runTests() {
     console.log("Starting API Tests...\n");
 
+    // Dummy data to inject into database
     const dummyMatch = {
         game_title: "Valorant",
         character_played: "Omen",

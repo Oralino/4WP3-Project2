@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
 const API_URL = 'http://localhost:3000/api';
@@ -49,6 +49,55 @@ export default function HomeScreen({ navigation }) {
         }));
     };
 
+    // Clear All Data function
+    const handleClearAll = () => {
+        Alert.alert(
+            "⚠️ Clear ALL Data",
+            "Are you sure you want to delete EVERY match? This cannot be undone.",
+            [
+                { text: "Cancel", style: "cancel" },
+                { 
+                    text: "Delete All", 
+                    style: "destructive", 
+                    onPress: async () => {
+                        try {
+                            const response = await fetch(API_URL, { method: 'DELETE' });
+                            if (response.ok) fetchMatches(); // Refresh the screen
+                        } catch (error) {
+                            console.error("Error clearing all data:", error);
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
+    // Folder Specific Clear Data Function
+    const handleClearFolder = (gameTitle, gameMatches) => {
+        Alert.alert(
+            `Clear ${gameTitle}`,
+            `Are you sure you want to delete all ${gameMatches.length} matches for ${gameTitle}?`,
+            [
+                { text: "Cancel", style: "cancel" },
+                { 
+                    text: "Delete", 
+                    style: "destructive", 
+                    onPress: async () => {
+                        try {
+                            // Delete request for every single match in this folder simultaneously
+                            await Promise.all(gameMatches.map(match => 
+                                fetch(`${API_URL}/${match.id}`, { method: 'DELETE' })
+                            ));
+                            fetchMatches(); // Refresh the screen
+                        } catch (error) {
+                            console.error(`Error clearing ${gameTitle} data:`, error);
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
     const groupedMatches = groupMatchesByGame();
     // Get an array of just the unique game titles to use as our list items
     const gameTitles = Object.keys(groupedMatches);
@@ -82,6 +131,14 @@ export default function HomeScreen({ navigation }) {
                                 <Text style={styles.editHint}>Tap to Edit or Delete</Text>
                             </TouchableOpacity>
                         ))}
+
+                        <TouchableOpacity 
+                            style={styles.folderClearButton}
+                            onPress={() => handleClearFolder(gameTitle, gameMatches)}
+                        >
+                            <Text style={styles.folderClearText}>Clear {gameTitle} Data</Text>
+                        </TouchableOpacity>
+
                     </View>
                 )}
             </View>
@@ -89,25 +146,36 @@ export default function HomeScreen({ navigation }) {
     };
 
     return (
-        <View style={styles.container}>
-            {loading ? (
-                <ActivityIndicator size="large" color="#0000ff" />
-            ) : (
-                <FlatList
-                    data={gameTitles}
-                    keyExtractor={(item) => item}
-                    renderItem={renderFolder}
-                    ListEmptyComponent={<Text style={styles.emptyText}>No matches logged yet.</Text>}
-                />
-            )}
+            <View style={styles.container}>
+                {loading ? (
+                    <ActivityIndicator size="large" color="#0000ff" />
+                ) : (
+                    <FlatList
+                        data={gameTitles}
+                        keyExtractor={(item) => item}
+                        renderItem={renderFolder}
+                        ListEmptyComponent={<Text style={styles.emptyText}>No matches logged yet.</Text>}
+                    />
+                )}
 
-            <TouchableOpacity 
-                style={styles.addButton}
-                onPress={() => navigation.navigate('Form')} 
-            >
-                <Text style={styles.addButtonText}>+ Log New Match</Text>
-            </TouchableOpacity>
-        </View>
+                <View style={styles.bottomButtons}>
+                    <TouchableOpacity 
+                        style={styles.addButton}
+                        onPress={() => navigation.navigate('Form')} 
+                    >
+                        <Text style={styles.buttonText}>+ Log New Match</Text>
+                    </TouchableOpacity>
+
+                    {matches.length > 0 && (
+                        <TouchableOpacity 
+                            style={styles.globalClearButton}
+                            onPress={handleClearAll} 
+                        >
+                            <Text style={styles.buttonText}>Clear All Data</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
+            </View>
     );
 }
 
@@ -126,8 +194,15 @@ const styles = StyleSheet.create({
     subtitle: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 5 },
     stats: { fontSize: 15, fontWeight: '600', color: '#007BFF' },
     editHint: { color: '#888', marginTop: 8, fontSize: 12, fontStyle: 'italic' },
+
+    // Folder Clear Styles
+    folderClearButton: { backgroundColor: '#ffeeba', padding: 10, borderRadius: 8, alignItems: 'center', marginBottom: 10, borderWidth: 1, borderColor: '#ffc107' },
+    folderClearText: { color: '#856404', fontWeight: 'bold' },
     
+    bottomButtons: { marginTop: 10 },
     emptyText: { textAlign: 'center', marginTop: 50, fontSize: 16, color: '#888' },
     addButton: { backgroundColor: '#28a745', padding: 15, borderRadius: 10, alignItems: 'center', marginTop: 10 },
-    addButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold' }
+    addButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
+    globalClearButton: { backgroundColor: '#DC3545', padding: 15, borderRadius: 10, alignItems: 'center' },
+    buttonText: { color: 'white', fontSize: 16, fontWeight: 'bold' }
 });

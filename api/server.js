@@ -87,3 +87,21 @@ app.put('/api/:id', async (req, res) => {
         res.status(500).json({ error: "Failed to update match" });
     }
 });
+
+// DELETE /api/:id - Delete a single match
+app.delete('/api/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await db.run('DELETE FROM matches WHERE id = ?', [id]);
+
+        if (result.changes === 0) {
+            return res.status(404).json({ error: "Match not found" });
+        }
+
+        res.json({ message: "Match deleted successfully!" });
+    } catch (error) {
+        console.error("Error deleting match:", error);
+        res.status(500).json({ error: "Failed to delete match" });
+    }
+});

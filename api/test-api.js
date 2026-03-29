@@ -1,6 +1,6 @@
-// Test Script to test all API endpoints and show database state
+// Test Script to test all 6 API endpoints with multiple records
 async function runTests() {
-    console.log("Starting Full CRUD API Tests...\n");
+    console.log("Starting Full 6-Route API Tests with Multiple Records...\n");
 
     // Helper function to fetch and print the current database contents
     async function printDatabaseState(stepName) {
@@ -12,43 +12,52 @@ async function runTests() {
         return data; // Return data incase I need it later for more testing
     }
 
-    // Dummy data to inject into database
-    const dummyMatch = {
-        game_title: "Valorant",
-        character_played: "Omen",
-        kills: 18,
-        kda_ratio: 2.5
-    };
+    // Array of 3 dummy matches to inject
+    const dummyMatches = [
+        { game_title: "Valorant", character_played: "Omen", kills: 18, kda_ratio: 2.5 },
+        { game_title: "League of Legends", character_played: "Ahri", kills: 12, kda_ratio: 4.0 },
+        { game_title: "Overwatch", character_played: "Tracer", kills: 22, kda_ratio: 3.1 }
+    ];
+
+    // Array to store the database-generated IDs
+    const insertedIds = [];
 
     try {
-        // Test the POST Route (Create a match)
-        console.log("Testing POST /api (Adding a match)...");
-        const postResponse = await fetch('http://localhost:3000/api', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(dummyMatch)
-        });
+        // Test the POST Route (Create 3 matches)
+        console.log("Testing POST /api (Adding 3 matches)...");
+        for (const match of dummyMatches) {
+            const postResponse = await fetch('http://localhost:3000/api', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(match)
+            });
+            const postResult = await postResponse.json();
+            insertedIds.push(postResult.id);
+        }
         
-        const postResult = await postResponse.json();
-        console.log("   Result:", postResult);
-
-        // Capture the generated ID for the next steps
-        const matchId = postResult.id;
-        if (!matchId) throw new Error("No ID returned from POST request.");
-
+        console.log(`   Result: Successfully inserted 3 matches with IDs: ${insertedIds.join(', ')}`);
+        
         // Print database after Create
-        await printDatabaseState("POST (Create)");
+        await printDatabaseState("POST (Create 3 Matches)");
 
+        // We will perform our single-item tests on the FIRST match we inserted
+        const targetId = insertedIds[0];
 
-        // Test the PUT Route (Update the match)
-        console.log(`Testing PUT /api/${matchId} (Updating the match)...`);
+        // Test the GET /api/:id Route (Fetch single match)
+        console.log(`Testing GET /api/${targetId} (Fetching single match)...`);
+        const getSingleResponse = await fetch(`http://localhost:3000/api/${targetId}`);
+        const getSingleResult = await getSingleResponse.json();
+        console.log("   Result:", getSingleResult);
+
+        // Test the PUT Route (Update the single match)
+        console.log(`\nTesting PUT /api/${targetId} (Updating the first match)...`);
         const updatedMatch = {
             game_title: "Valorant",
             character_played: "Omen",
-            kills: 25, // Updated value
-            kda_ratio: 3.2 // Updated value
+            kills: 30, // Updated value
+            kda_ratio: 5.5 // Updated value
         };
-        const putResponse = await fetch(`http://localhost:3000/api/${matchId}`, {
+        const putResponse = await fetch(`http://localhost:3000/api/${targetId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(updatedMatch)
@@ -57,27 +66,35 @@ async function runTests() {
         console.log("   Result:", putResult);
 
         // Print database after Update
-        await printDatabaseState("PUT (Update)");
+        await printDatabaseState("PUT (Update First Match)");
 
-
-        // Test the DELETE Route (Remove the match)
-        console.log(`Testing DELETE /api/${matchId} (Removing the match)...`);
-        const deleteResponse = await fetch(`http://localhost:3000/api/${matchId}`, {
+        // Test the DELETE Route (Remove the single match)
+        console.log(`Testing DELETE /api/${targetId} (Removing the first match)...`);
+        const deleteResponse = await fetch(`http://localhost:3000/api/${targetId}`, {
             method: 'DELETE'
         });
         const deleteResult = await deleteResponse.json();
         console.log("   Result:", deleteResult);
 
-        // Print database after Delete
-        const finalData = await printDatabaseState("DELETE (Remove)");
+        // Print database after Delete Single (There should be 2 matches left)
+        await printDatabaseState("DELETE Single (Remove First Match)");
 
+        // Test the DELETE /api Route (Clear ALL remaining matches)
+        console.log("Testing DELETE /api (Clearing the remaining database records)...");
+        const deleteAllResponse = await fetch('http://localhost:3000/api', {
+            method: 'DELETE'
+        });
+        const deleteAllResult = await deleteAllResponse.json();
+        console.log("   Result:", deleteAllResult);
+
+        // Print database after Delete All
+        const finalData = await printDatabaseState("DELETE All (Clear Database)");
 
         // Final Verification
-        const stillExists = finalData.find(m => m.id === matchId);
-        if (!stillExists) {
-            console.log(`   Verification: Match ${matchId} was successfully removed.`);
+        if (finalData.length === 0) {
+            console.log("   Verification: Database is completely empty. 'Clear All' was successful.");
         } else {
-            console.log(`   Verification Failed: Match ${matchId} is still in the database.`);
+            console.log("   Verification Failed: Database is not empty.");
         }
 
         console.log("\nAll tests completed successfully!");

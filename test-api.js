@@ -21,7 +21,7 @@ async function runTests() {
         const postResult = await postResponse.json();
         console.log("   Result:", postResult);
 
-        // 2. Test the GET Route (Read all matches)
+        // Test the GET Route (Read all matches)
         console.log("\nTesting GET /api (Fetching all matches)...");
         const getResponse = await fetch('http://localhost:3000/api');
         

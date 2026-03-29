@@ -1,8 +1,10 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Platform } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
-const API_URL = 'http://localhost:3000/api';
+// const API_URL = 'http://localhost:3000/api'; // Use this for Local PC
+
+const API_URL = 'http://10.0.0.13:3000/api'; // Use this if trying to remote connect to phone
 
 export default function HomeScreen({ navigation }) {
     const [matches, setMatches] = useState([]);
@@ -50,52 +52,61 @@ export default function HomeScreen({ navigation }) {
     };
 
     // Clear All Data function
-    const handleClearAll = () => {
-        Alert.alert(
-            "⚠️ Clear ALL Data",
-            "Are you sure you want to delete EVERY match? This cannot be undone.",
-            [
-                { text: "Cancel", style: "cancel" },
-                { 
-                    text: "Delete All", 
-                    style: "destructive", 
-                    onPress: async () => {
-                        try {
-                            const response = await fetch(API_URL, { method: 'DELETE' });
-                            if (response.ok) fetchMatches(); // Refresh the screen
-                        } catch (error) {
-                            console.error("Error clearing all data:", error);
-                        }
-                    }
-                }
-            ]
-        );
+const handleClearAll = async () => {
+        const executeDelete = async () => {
+            try {
+                const response = await fetch(API_URL, { method: 'DELETE' });
+                if (response.ok) fetchMatches();
+            } catch (error) {
+                console.error("Error clearing all data:", error);
+            }
+        };
+
+        if (Platform.OS === 'web') {
+            // Standard web browser confirmation
+            const confirmed = window.confirm("Are you sure you want to delete EVERY match? This cannot be undone.");
+            if (confirmed) executeDelete();
+        } else {
+            // Native iOS/Android confirmation
+            Alert.alert(
+                "Clear ALL Data",
+                "Are you sure you want to delete EVERY match? This cannot be undone.",
+                [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Delete All", style: "destructive", onPress: executeDelete }
+                ]
+            );
+        }
     };
 
     // Folder Specific Clear Data Function
-    const handleClearFolder = (gameTitle, gameMatches) => {
-        Alert.alert(
-            `Clear ${gameTitle}`,
-            `Are you sure you want to delete all ${gameMatches.length} matches for ${gameTitle}?`,
-            [
-                { text: "Cancel", style: "cancel" },
-                { 
-                    text: "Delete", 
-                    style: "destructive", 
-                    onPress: async () => {
-                        try {
-                            // Delete request for every single match in this folder simultaneously
-                            await Promise.all(gameMatches.map(match => 
-                                fetch(`${API_URL}/${match.id}`, { method: 'DELETE' })
-                            ));
-                            fetchMatches(); // Refresh the screen
-                        } catch (error) {
-                            console.error(`Error clearing ${gameTitle} data:`, error);
-                        }
-                    }
-                }
-            ]
-        );
+    const handleClearFolder = async (gameTitle, gameMatches) => {
+        const executeDelete = async () => {
+            try {
+                await Promise.all(gameMatches.map(match => 
+                    fetch(`${API_URL}/${match.id}`, { method: 'DELETE' })
+                ));
+                fetchMatches();
+            } catch (error) {
+                console.error(`Error clearing ${gameTitle} data:`, error);
+            }
+        };
+
+        if (Platform.OS === 'web') {
+            // Standard web browser confirmation
+            const confirmed = window.confirm(`Are you sure you want to delete all ${gameMatches.length} matches for ${gameTitle}?`);
+            if (confirmed) executeDelete();
+        } else {
+            // Native iOS/Android confirmation
+            Alert.alert(
+                `Clear ${gameTitle}`,
+                `Are you sure you want to delete all ${gameMatches.length} matches for ${gameTitle}?`,
+                [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Delete", style: "destructive", onPress: executeDelete }
+                ]
+            );
+        }
     };
 
     const groupedMatches = groupMatchesByGame();

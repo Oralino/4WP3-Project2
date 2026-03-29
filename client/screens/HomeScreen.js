@@ -28,7 +28,6 @@ export default function HomeScreen({ navigation }) {
         }, [])
     );
 
-    // How a single match card should look
     const renderItem = ({ item }) => (
         <View style={styles.card}>
             <Text style={styles.title}>🎮 {item.game_title}</Text>

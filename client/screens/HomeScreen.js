@@ -2,9 +2,9 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Platform } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
-// const API_URL = 'http://localhost:3000/api'; // Use this for Local PC
+const API_URL = 'http://localhost:3000/api'; // Use this for Local PC
 
-const API_URL = 'http://10.0.0.13:3000/api'; // Use this if trying to remote connect to phone
+// const API_URL = 'http://10.0.0.13:3000/api'; // Use this if trying to remote connect to phone
 
 export default function HomeScreen({ navigation }) {
     const [matches, setMatches] = useState([]);

@@ -9,7 +9,7 @@ async function runTests() {
         console.log(`\n--- Database State After ${stepName} ---`);
         console.log(data);
         console.log("----------------------------------------\n");
-        return data; // Return data incase I need it later for more testing
+        return data;
     }
 
     // Array of 3 dummy matches to inject

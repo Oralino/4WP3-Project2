@@ -1,0 +1,18 @@
+FOLDER STRUCTURE:
+/api    - Express & SQLite Backend
+/client - React Native (Expo) Frontend
+
+HOW TO RUN THE BACKEND:
+1. Open a terminal in the /api folder.
+2. Run 'npm install' to restore dependencies.
+3. Run 'node server.js' to start the API on http://localhost:3000.
+
+HOW TO RUN THE FRONTEND:
+1. Open a second terminal in the /client folder.
+2. Run 'npm install' to restore dependencies.
+3. Run 'npx expo start' to launch the application.
+4. Press 'w' to run in the web browser or scan the QR code with the Expo Go app.
+
+TESTING THE API:
+A 'test-api.js' script is included in the /api folder. 
+With the server running, run 'node test-api.js' to verify all CRUD operations.

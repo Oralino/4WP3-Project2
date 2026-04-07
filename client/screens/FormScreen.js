@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 
-// const API_URL = 'http://localhost:3000/api'; // Use this for Local PC
+const API_URL = 'http://localhost:3000/api'; // Use this for Local PC
 
-const API_URL = 'http://10.0.0.13:3000/api'; // Use this if trying to remote connect to phone
+// const API_URL = 'http://10.0.0.13:3000/api'; // Use this if trying to remote connect to phone
 
 
 export default function FormScreen({ route, navigation }) {
-    // If we navigated here by tapping an existing match, 'route.params' will contain its data
     const editingMatch = route.params?.match;
 
     // Pre-fill the state if editing, otherwise start blank

@@ -1,2 +1,7 @@
 node_modules/
 database.db
+
+# Secrets: never commit
+.env
+.env.*
+!.env.example
